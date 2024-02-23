@@ -52,7 +52,7 @@ def map_joystick_to_height(joystick_input):
 
     # Map the joystick input from [-1, 1] to [0, 1] for motor thrust
     if(joystick_input > 0):
-        return 3
+        return 4
     return 0
 
 if __name__ == "__main__":
@@ -92,19 +92,19 @@ if __name__ == "__main__":
             if(buttons[0] == 1):
                 is_motor_on = not is_motor_on
             if is_motor_on:
-                m1 = map_joystick_to_thrust(axis[5])
-                m2 = map_joystick_to_thrust(axis[5])
-                #height = map_joystick_to_height(axis[5])
-                #print(height)
+                #m1 = map_joystick_to_thrust(axis[5])
+                #m2 = map_joystick_to_thrust(axis[5])
+                height = map_joystick_to_height(axis[5])
+                print(height)
 
-            s1 = joystick_to_servo(axis[3])
-            s2 = joystick_to_servo(axis[3])
-            if(axis[4] > 0.5):
+            s1 = 75
+            s2 = 75
+            """if(axis[4] > 0.5):
                 s1 = 105
                 s2 = 75
             elif(axis[4] < -0.5):
                 s1 = 75
-                s2 = 105
+                s2 = 105"""
             serial.send_control_params(ROBOT_MAC, (m1, m2, s1, s2, led, height, 0, 0, 0, 0, 0, 0, 0))
             time.sleep(.3)
             

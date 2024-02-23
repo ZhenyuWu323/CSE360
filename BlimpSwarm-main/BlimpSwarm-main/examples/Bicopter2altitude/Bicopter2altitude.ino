@@ -95,9 +95,22 @@ void loop() {
      * kpz and kdz are changed from the ground station and are floats declared at the top
      */
     
-    float desired_height = cmd.params[0];
+    float desired_height = cmd.params[5];
+    //Serial.println(String("Height: ") + desired_height);
+    Serial.println(String("Current Height") + estimatedZ);
     float m1 = 0;  // YOUR INPUT FOR THE MOTOR 1 HERE
     float m2 = 0;  // YOUR INPUT FOR THE MOTOR 1 HERE
+
+    //P Control
+    //float control_input = P_control(desired_height, estimatedZ, kpz);
+
+    //PD Control
+    float control_input = PD_control(desired_height, estimatedZ,estimatedVZ, kpz, kdz);
+    m1 = control_input;
+    m2 = control_input;
+    //Serial.println(String("Thrust: ") + m1);
+
+
 
     /**
      * End of controller
@@ -117,11 +130,30 @@ void loop() {
 }
 
 
+float P_control(float desired_height, float estimatedZ, float kpz){
+  float control_input = kpz * (desired_height - estimatedZ);
+    if(control_input < 0){
+      control_input = 0;
+    }
+    return control_input;
+}
+
+
+float PD_control(float desired_height, float estimatedZ, float estimatedVZ,float kpz,float kdz){
+  float desiredVZ = 0.0;
+  float control_input = kpz*(desired_height - estimatedZ) + kdz * (desiredVZ - estimatedVZ);
+  if(control_input < 0){
+      control_input = 0;
+  } 
+  return control_input;
+}
+
+
 void paramUpdate(){
     preferences.begin("params", true); //true means read-only
 
-    kpz = preferences.getFloat("kpz", .2); //(value is an int) (default_value is manually set)
-    kdz = preferences.getFloat("kdz", 0); //(value is an int) (default_value is manually set)
+    kpz = preferences.getFloat("kpz", 0.7); //(value is an int) (default_value is manually set)
+    kdz = preferences.getFloat("kdz", 0.1); //(value is an int) (default_value is manually set)
     
 
     Serial.print("Update Paramters!");

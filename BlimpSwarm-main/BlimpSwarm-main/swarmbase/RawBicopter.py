@@ -64,7 +64,7 @@ if __name__ == "__main__":
             ############# End CONTROL INPUTS ###############
 
             # Send through serial port
-            serial.send_control_params(ROBOT_MAC, (m1, m2, 90, 90, led, 0, 0, 0, 0, 0, 0, 0, 0))
+            serial.send_control_params(ROBOT_MAC, (m1, m2,79, 79, led, 0, 0, 0, 0, 0, 0, 0, 0))
             time.sleep(.05)
             
     except KeyboardInterrupt:
