@@ -20,13 +20,14 @@ uint8_t base_mac[6] = {0xC0, 0x49, 0xEF, 0xE3, 0x34, 0x78};  // fixme load this 
 
 Barometer baro;
 
-const float TIME_STEP = .01;
+const float TIME_STEP = .004;
 // Robot
 Robot* myRobot = nullptr;
 // Communication
 BaseCommunicator* baseComm = nullptr;
 // Control input from base station
 ControlInput cmd;
+ReceivedData rcv; 
 
 float estimatedZ = 0;
 float startHeight = 0;
@@ -43,7 +44,7 @@ void setup() {
 
     // init communication
     baseComm = new BaseCommunicator(new LLC_ESPNow());
-    baseComm->setMainBaseStation(base_mac);
+    baseComm->setMainBaseStation();
 
     // init robot with new parameters
     myRobot = RobotFactory::createRobot("RawBicopter");
@@ -83,9 +84,14 @@ void loop() {
       estimatedZ = estimatedZ * .6 + height * .4;
       estimatedVZ = estimatedVZ * .9 + height_velocity * .1;
       
-      Serial.print(estimatedZ);
-      Serial.print(", ");
-      Serial.println(estimatedVZ);
+      // Serial.print(estimatedZ);
+      // Serial.print(", ");
+      // Serial.println(estimatedVZ);
+      rcv.flag = 1;
+      rcv.values[0] = estimatedZ;
+      rcv.values[1] = estimatedVZ;
+      bool sent = baseComm->sendMeasurements(&rcv);
+      // Serial.println(sent);
     }
 
 
@@ -101,17 +107,23 @@ void loop() {
     float m1 = 0;  // YOUR INPUT FOR THE MOTOR 1 HERE
     float m2 = 0;  // YOUR INPUT FOR THE MOTOR 1 HERE
 
+
+    //P Control
+    //float control_input = P_control(desired_height, estimatedZ, kpz);
+
+    
     //P Control
     //float control_input = P_control(desired_height, estimatedZ, kpz);
 
     //PD Control
-    float control_input = PD_control(desired_height, estimatedZ,estimatedVZ, kpz, kdz);
-    m1 = control_input;
-    m2 = control_input;
-    //Serial.println(String("Thrust: ") + m1);
-
-
-
+    if(desired_height > 0){
+      float control_input = PD_control(desired_height, estimatedZ, estimatedVZ, kpz, kdz);
+      m1 = control_input;
+      m2 = control_input;
+    } else {
+      m1 = 0;
+      m2 = 0;
+    }
     /**
      * End of controller
      */
@@ -128,7 +140,6 @@ void loop() {
 
     sleep(TIME_STEP);
 }
-
 
 float P_control(float desired_height, float estimatedZ, float kpz){
   float control_input = kpz * (desired_height - estimatedZ);
@@ -148,12 +159,12 @@ float PD_control(float desired_height, float estimatedZ, float estimatedVZ,float
   return control_input;
 }
 
-
 void paramUpdate(){
     preferences.begin("params", true); //true means read-only
 
-    kpz = preferences.getFloat("kpz", 0.7); //(value is an int) (default_value is manually set)
-    kdz = preferences.getFloat("kdz", 0.1); //(value is an int) (default_value is manually set)
+    kpz = preferences.getFloat("kpz", .2); //(value is an int) (default_value is manually set)
+    kdz = preferences.getFloat("kdz", 0); //(value is an int) (default_value is manually set)
+    baseComm->setMainBaseStation();
     
 
     Serial.print("Update Paramters!");
