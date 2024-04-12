@@ -15,7 +15,10 @@
 
 
 RawBicopter::RawBicopter(){
+    
+}
 
+void RawBicopter::startup() {
     servo1 = new AServo(0, 1, 0, SERVO1);
     servo2 = new AServo(0, 1, 0, SERVO2);
     motor1 = new BLMotor(0, 1, 0, THRUST1, 55);
@@ -32,17 +35,14 @@ RawBicopter::RawBicopter(){
     Preferences preferences;
     
     preferences.begin("params", false); //true means read-only
-    bool calibrate = preferences.getBool("calibrate", false); //(value is an int) (default_value is manually set)
-    if (calibrate){
+    if (preferences.getBool("calibrate", false)){
         //calibrate brushless motors
-        motor2->calibrate();
-        motor1->calibrate();
+        calibrate();
         preferences.putBool("calibrate", false);
     }
     else {
         // Arm brushless motors
-        motor1->arm();
-        motor2->arm();
+        arm();
     }
     preferences.end(); //true means read-only
 }
@@ -63,6 +63,11 @@ bool RawBicopter::actuate(const float actuators[], int size) {
     return true;
 }
 
+
+bool RawBicopter::control(float sensors[MAX_SENSORS], float controls[], int size) {
+    return RawBicopter::actuate(controls, size);
+}
+
 void RawBicopter::getPreferences() {
     
     // Implementation for reading values from non-volatile storage (NVS)
@@ -77,8 +82,48 @@ void RawBicopter::getPreferences() {
 }
 
 void RawBicopter::calibrate(){
-    motor1->calibrate();
-    motor2->calibrate();
+//    motor1->calibrate();
+//    motor2->calibrate();
+
+
+    delay(1000);
+    Serial.println("Calibrating ESCs....");
+    // ESC arming sequence for BLHeli S
+    motor1->act(1);
+    motor2->act(1);
+    delay(8000);
+
+    // Back to minimum value
+    motor1->act(0);
+    motor2->act(0);
+    delay(8000);
+    //motor1->act(-1); //FIXME is this necessary? If so, we can have a if (value== -1) then writeMicroseconds(0) in motor
+    delay(1000);
+    Serial.println("Calibration completed");
+}
+void RawBicopter::arm(){
+// ESC arming sequence for BLHeli S
+    motor1->act(0);
+    motor2->act(0);
+    delay(10);
+
+    // Sweep up
+    for (int i = 1050; i < 1500; i++)
+    {
+        motor1->act((i-1000)/1000);
+        motor2->act((i-1000)/1000);
+        delay(6);
+    }
+    // Sweep down
+    // for (int i = 1500; i > 1050; i--)
+    // {
+    //     thrust.writeMicroseconds(i);
+    //     delay(6);
+    // }
+    // Back to minimum value
+    motor1->act(0);
+    motor2->act(0);
+    delay(1000);
 }
 //void RawBicopter::testActuators(float actuationCmd[4]) {
 //    int servo_delta = 1;

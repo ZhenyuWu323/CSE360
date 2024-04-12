@@ -1,11 +1,11 @@
 #include "Barometer.h"
 
-Barometer::Barometer(){
+BarometerOld::BarometerOld(){
     
     //pass
     
 }
-void Barometer::init(){
+void BarometerOld::init(){
     /* Initialise the sensor */
     int countTries = 0;
     baroOn = bme.begin_I2C();
@@ -29,32 +29,33 @@ void Barometer::init(){
     if (baroOn){
         estimatedZ = bme.readAltitude(1013.25);
         oldZ = estimatedZ;
+        float groundZ = getEstimatedZ();
+        delay(30);
+        updateBarometer();
+        int tempcount = 0;
+        while (abs(groundZ - getEstimatedZ()) > .005 || groundZ == getEstimatedZ()){
+        // Serial.print("Ground Cal...");
+        // Serial.println(groundZ - getEstimatedZ());
+        if (tempcount >30){
+            break;
+        }
+        tempcount += 1;
+        groundZ = getEstimatedZ();
+        delay(10);
+
+        updateBarometer();
+        }
+        Serial.print("Ground Cal Done: ");
+        Serial.println(groundZ - getEstimatedZ());
     } else {
         estimatedZ = 0;
         oldZ = 0;
     }
-    float groundZ = getEstimatedZ();
-    delay(30);
-    updateBarometer();
-    int tempcount = 0;
-    while (abs(groundZ - getEstimatedZ()) > .005 || groundZ == getEstimatedZ()){
-      Serial.print("Ground Cal...");
-      Serial.println(groundZ - getEstimatedZ());
-      if (tempcount >30){
-        break;
-      }
-      tempcount += 1;
-      groundZ = getEstimatedZ();
-      delay(10);
-
-      updateBarometer();
-    }
-    Serial.print("Ground Cal Done: ");
-    Serial.println(groundZ - getEstimatedZ());
+    
     
     
 }
-bool Barometer::updateBarometer(){
+bool BarometerOld::updateBarometer(){
     if (baroOn){
         if ((micros() - tStart) > (BMP390_SAMPLERATE_DELAY_MS * 1000)) {
             oldZ = estimatedZ;
@@ -68,12 +69,12 @@ bool Barometer::updateBarometer(){
 }
 
 
-float Barometer::getEstimatedZ(){
+float BarometerOld::getEstimatedZ(){
     return estimatedZ;
 
 
 }
-float Barometer::getVelocityZ(){
+float BarometerOld::getVelocityZ(){
     // Micro seconds to seconds
     return 1000000 * (estimatedZ - oldZ) / dtBaro;
 }

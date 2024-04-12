@@ -5,7 +5,8 @@
  */
 
 #include "BlimpSwarm.h"
-#include "robot/RobotFactory.h"
+// #include "robot/RobotFactory.h"
+#include "robot/RawBicopter.h"
 #include "comm/BaseCommunicator.h"
 #include "comm/LLC_ESPNow.h"
 #include "util/Print.h"
@@ -18,7 +19,7 @@
 uint8_t base_mac[6] = {0xC0, 0x49, 0xEF, 0xE3, 0x34, 0x78};  // fixme load this from memory
 
 
-Barometer baro;
+BarometerOld baro;
 
 const float TIME_STEP = .004;
 // Robot
@@ -47,7 +48,8 @@ void setup() {
     baseComm->setMainBaseStation();
 
     // init robot with new parameters
-    myRobot = RobotFactory::createRobot("RawBicopter");
+    // myRobot = RobotFactory::createRobot("RawBicopter");
+    myRobot = new RawBicopter();
 
     // Start sensor
     baro.init();
@@ -101,29 +103,10 @@ void loop() {
      * kpz and kdz are changed from the ground station and are floats declared at the top
      */
     
-    float desired_height = cmd.params[5];
-    //Serial.println(String("Height: ") + desired_height);
-    Serial.println(String("Current Height") + estimatedZ);
+    float desired_height = cmd.params[0];
     float m1 = 0;  // YOUR INPUT FOR THE MOTOR 1 HERE
     float m2 = 0;  // YOUR INPUT FOR THE MOTOR 1 HERE
 
-
-    //P Control
-    //float control_input = P_control(desired_height, estimatedZ, kpz);
-
-    
-    //P Control
-    //float control_input = P_control(desired_height, estimatedZ, kpz);
-
-    //PD Control
-    if(desired_height > 0){
-      float control_input = PD_control(desired_height, estimatedZ, estimatedVZ, kpz, kdz);
-      m1 = control_input;
-      m2 = control_input;
-    } else {
-      m1 = 0;
-      m2 = 0;
-    }
     /**
      * End of controller
      */
@@ -141,23 +124,6 @@ void loop() {
     sleep(TIME_STEP);
 }
 
-float P_control(float desired_height, float estimatedZ, float kpz){
-  float control_input = kpz * (desired_height - estimatedZ);
-    if(control_input < 0){
-      control_input = 0;
-    }
-    return control_input;
-}
-
-
-float PD_control(float desired_height, float estimatedZ, float estimatedVZ,float kpz,float kdz){
-  float desiredVZ = 0.0;
-  float control_input = kpz*(desired_height - estimatedZ) + kdz * (desiredVZ - estimatedVZ);
-  if(control_input < 0){
-      control_input = 0;
-  } 
-  return control_input;
-}
 
 void paramUpdate(){
     preferences.begin("params", true); //true means read-only
