@@ -1,5 +1,7 @@
 
 
+# Untitled - By: WUzy2 - Fri Apr 26 2024
+
 from pyb import UART, LED
 
 import sensor
@@ -52,7 +54,7 @@ def refreshIbusConnection():
         uart_input = uart.read()
 
 
-target = (14, 95, -35, 127, 29, 75)
+target = (0, 100, 21, 127, -23, 127)
 
 while True:
     ############### Color detection here ###############
@@ -61,9 +63,9 @@ while True:
 
     clock.tick()  # Update the FPS clock.
     img = sensor.snapshot()  # Take a picture and return the image.
-    print(clock.fps())  # Note: OpenMV Cam runs about half as fast when connected
+    #print(clock.fps())  # Note: OpenMV Cam runs about half as fast when connected
     # to the IDE. The FPS should increase once disconnected.
-    blobs = img.find_blobs([target], area_threshold=2500, merge=True)
+    blobs = img.find_blobs([target], area_threshold=1000, merge=True)
 
     if blobs:
         color_is_detected = True
@@ -92,7 +94,7 @@ while True:
         b_LED.off()
 
     ###############################
-
+    print(pixels_x)
 
 
     messageToSend = [flag, pixels_x, pixels_y, pixels_w, pixels_h]
