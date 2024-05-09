@@ -63,16 +63,22 @@ if __name__ == "__main__":
 
     # nicla parameters
     serial.send_preference(ROBOT_MAC, DataType_Float, "y_thresh", 0.5)
-    serial.send_preference(ROBOT_MAC, DataType_Float, "y_strength", 1)
-    serial.send_preference(ROBOT_MAC, DataType_Float, "x_strength", 1)
+    serial.send_preference(ROBOT_MAC, DataType_Float, "y_strength", .8)
+    serial.send_preference(ROBOT_MAC, DataType_Float, "x_strength", 1.8)
 
-    serial.send_preference(ROBOT_MAC, DataType_Float, "fx_togoal", 0.15)
-    serial.send_preference(ROBOT_MAC, DataType_Float, "fx_charge", 0.4)
-    serial.send_preference(ROBOT_MAC, DataType_Float, "fx_levy", 0.1)
+    #spiralIncrement: yaw
+    serial.send_preference(ROBOT_MAC, DataType_Float, "fx_togoal", 0.5)
+    #Charge force 0.2
+    serial.send_preference(ROBOT_MAC, DataType_Float, "fx_charge", 0.2)
+
+    #radiusIncrement:force
+    serial.send_preference(ROBOT_MAC, DataType_Float, "fx_levy", 0.05)
 
     serial.send_preference(ROBOT_MAC, DataType_Int, "n_max_x", 240)
     serial.send_preference(ROBOT_MAC, DataType_Int, "n_max_y", 160)
+    #height threshold 0.15
     serial.send_preference(ROBOT_MAC, DataType_Float, "h_ratio", 0.1)
+
     serial.send_control_params(ROBOT_MAC, (0,0,0,0, 0, 0, 0, 0, 0, 0, 0, 1, 0))
     time.sleep(.2)
 
@@ -151,6 +157,7 @@ if __name__ == "__main__":
             fx = - axis[2] + axis[5]
             if (fx < 0):
                 fx = fx * .5
+            print("FX: ", fx)
 
             #fx_ave = fx_ave * .8 + fx * .2 # smooths the fx for more gradual effects
             fx_ave = fx_ave * .5 + fx * .1

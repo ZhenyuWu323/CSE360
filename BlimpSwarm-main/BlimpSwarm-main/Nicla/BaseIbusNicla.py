@@ -54,7 +54,7 @@ def refreshIbusConnection():
         uart_input = uart.read()
 
 
-target = (0, 100, 21, 127, -23, 127)
+target = (0, 100, 20, 127, -25, 127)
 
 while True:
     ############### Color detection here ###############
@@ -65,36 +65,37 @@ while True:
     img = sensor.snapshot()  # Take a picture and return the image.
     #print(clock.fps())  # Note: OpenMV Cam runs about half as fast when connected
     # to the IDE. The FPS should increase once disconnected.
-    blobs = img.find_blobs([target], area_threshold=1000, merge=True)
+    blobs = img.find_blobs([target], area_threshold=50, merge=True)
 
     if blobs:
         color_is_detected = True
-    else:
-        color_is_detected = False
-
-    pixels_x = 0 # put your x center in pixels
-    pixels_y = 0 # put your y center in pixels
-    pixels_w = 0 # put your width in pixels (these have almost no affect on control (for now))
-    pixels_h = 0 # put your height center in pixels (these have almost no affect on control (for now))
-
-    flag = 0
-    if (color_is_detected):
+        # Select the largest blob based on the area
+        largest_blob = max(blobs, key=lambda b: b.pixels())
+        pixels_x = largest_blob.cx()  # X center of the largest blob
+        pixels_y = largest_blob.cy()  # Y center of the largest blob
+        pixels_w = largest_blob.w()   # Width of the largest blob
+        pixels_h = largest_blob.h()   # Height of the largest blob
+        # Draw a rectangle where the blob was found
+        #img.draw_rectangle(largest_blob.rect(), color=(0,255,0))
+        # Draw a cross in the middle of the blob
+        #img.draw_cross(largest_blob.cx(), largest_blob.cy(), color=(0,255,0))
         g_LED.off()
         r_LED.off()
         b_LED.on()
-        flag = 1 # when a color is detected make this flag 1
-        for blob in blobs:
-            pixels_x = blob.cx() # put your x center in pixels
-            pixels_y = blob.cy() # put your y center in pixels
-            pixels_w = blob.w() # put your width in pixels (these have almost no affect on control (for now))
-            pixels_h = blob.h() # put your height center in pixels (these have almost no affect on control (for now))
+        flag = 1  # Set the flag to 1 when a color is detected
     else:
+        color_is_detected = False
         g_LED.on()
         r_LED.off()
         b_LED.off()
+        pixels_x = 0
+        pixels_y = 0
+        pixels_w = 0
+        pixels_h = 0
+        flag = 0
 
     ###############################
-    print(pixels_x)
+    #print(f"Center: ({pixels_x}, {pixels_y}), Width: {pixels_w}, Height: {pixels_h}")
 
 
     messageToSend = [flag, pixels_x, pixels_y, pixels_w, pixels_h]
